@@ -411,11 +411,7 @@ export function ResultsTable({ selectedReportId }: ResultsTableProps) {
                 : null;
               return (
                 <FragmentRows key={metric.id}>
-                  <motion.tr
-                    layout="position"
-                    transition={{ duration: reduceMotion ? 0 : 0.18 }}
-                    className={`result-row ${expanded ? "result-row-expanded" : ""}`}
-                  >
+                  <tr className={`result-row ${expanded ? "result-row-expanded" : ""}`}>
                     <th scope="row" className="sticky-column biomarker-column">
                       <button
                         type="button"
@@ -440,7 +436,7 @@ export function ResultsTable({ selectedReportId }: ResultsTableProps) {
                     <td className="trend-cell">
                       {delta === null ? "—" : delta === 0 ? "No change" : `${delta > 0 ? "↑" : "↓"} ${formatValue(Math.abs(delta), metric.precision)}`}
                     </td>
-                  </motion.tr>
+                  </tr>
                   <AnimatePresence initial={false}>
                     {expanded && (
                       <motion.tr
@@ -454,10 +450,10 @@ export function ResultsTable({ selectedReportId }: ResultsTableProps) {
                         <td colSpan={8}>
                           <motion.div
                             className="expanded-readings-shell"
-                            initial={reduceMotion ? false : { height: 0, opacity: 0 }}
-                            animate={{ height: "auto", opacity: 1 }}
-                            exit={reduceMotion ? undefined : { height: 0, opacity: 0 }}
-                            transition={{ duration: reduceMotion ? 0 : 0.22, ease: [0.22, 1, 0.36, 1] }}
+                            initial={reduceMotion ? false : { opacity: 0, y: -3 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={reduceMotion ? undefined : { opacity: 0, y: -2 }}
+                            transition={{ duration: reduceMotion ? 0 : 0.14, ease: [0.22, 1, 0.36, 1] }}
                             style={{ overflow: "hidden" }}
                           >
                             <div className="expanded-readings">

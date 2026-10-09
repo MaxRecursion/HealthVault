@@ -21,11 +21,10 @@ export function ReferenceDetails() {
       {isOpen && <motion.div
         id="report-reference-content"
         className="reference-body"
-        initial={reduceMotion ? false : { height: 0, opacity: 0 }}
-        animate={{ height: "auto", opacity: 1 }}
-        exit={reduceMotion ? undefined : { height: 0, opacity: 0 }}
-        transition={{ duration: reduceMotion ? 0 : 0.28, ease: [0.22, 1, 0.36, 1] }}
-        style={{ overflow: "hidden" }}
+        initial={reduceMotion ? false : { opacity: 0, y: -4 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={reduceMotion ? undefined : { opacity: 0, y: -2 }}
+        transition={{ duration: reduceMotion ? 0 : 0.16, ease: [0.22, 1, 0.36, 1] }}
       >
         <div className="report-source-grid">
           {reports.map((report) => (
