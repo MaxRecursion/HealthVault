@@ -258,39 +258,16 @@ a { color: inherit; text-decoration: none; }
 .expand-marker strong { display: block; color: var(--ink-soft); font-size: 9px; font-weight: 650; line-height: 1.35; }
 .expand-marker small { display: block; margin-top: 2px; color: var(--muted); font-size: 7.5px; line-height: 1.2; }
 .reading-cell { white-space: nowrap; font-variant-numeric: tabular-nums; }
-.mini-trend-cell { width: 205px; min-width: 205px; vertical-align: middle; }
-.mini-trend-heading { width: 205px; min-width: 205px; }
-.mini-trend-heading small { display: block; margin-top: 2px; color: var(--muted); font-size: 7px; font-weight: 550; letter-spacing: 0; text-transform: none; }
-.mini-trend-wrap { display: flex; flex-direction: column; align-items: flex-start; gap: 1px; width: 100%; }
-.mini-range-plot { display: block; width: 164px; height: 54px; overflow: visible; }
-.mini-selected-column { fill: var(--green-soft); opacity: .38; }
-.mini-date-guide { stroke: var(--line); stroke-width: .7; stroke-dasharray: 1.5 2; }
-.mini-axis-line { stroke: var(--line-strong); stroke-width: .75; }
-.mini-range-zone rect { stroke-width: .7; }
-.mini-range-zone line { stroke-width: 1; }
-.mini-range-zone-normal rect { fill: var(--green-soft); stroke: color-mix(in srgb, var(--green) 35%, transparent); }
-.mini-range-zone-normal line { stroke: var(--green); }
-.mini-range-zone-borderline rect, .mini-range-zone-low rect { fill: var(--amber-soft); stroke: color-mix(in srgb, var(--amber) 38%, transparent); }
-.mini-range-zone-borderline line, .mini-range-zone-low line { stroke: var(--amber); }
-.mini-range-zone-high rect { fill: var(--red-soft); stroke: color-mix(in srgb, var(--red) 38%, transparent); }
-.mini-range-zone-high line { stroke: var(--red); }
-.mini-trend-line { stroke: var(--ink-soft); stroke-width: 1.2; stroke-linecap: round; opacity: .62; }
-.mini-value-dot { stroke: var(--surface); stroke-width: 1; }
-.mini-value-dot-normal { fill: var(--green); }
-.mini-value-dot-low, .mini-value-dot-borderline { fill: var(--amber); }
-.mini-value-dot-high { fill: var(--red); }
-.mini-value-dot-missing, .mini-value-dot-unclassified { fill: var(--muted); }
-.mini-value-dot-selected { stroke-width: 1.6; }
-.mini-date-label { fill: var(--muted); font-size: 6.5px; font-weight: 550; }
-.mini-date-label-selected { fill: var(--green); font-weight: 750; }
-.mini-range-distance { display: block; max-width: 190px; overflow: hidden; color: var(--muted); font-size: 8px; line-height: 1.3; text-overflow: ellipsis; white-space: nowrap; }
-.mini-range-distance-normal { color: var(--green); }
-.mini-range-distance-low, .mini-range-distance-borderline { color: var(--amber); }
-.mini-range-distance-high { color: var(--red); }
-.mini-trend-key { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin: -4px 2px 9px; color: var(--muted); font-size: 8px; }
-.mini-key-dot, .mini-key-band, .mini-key-selected { display: inline-block; width: 8px; height: 8px; margin-left: 4px; border-radius: 50%; background: var(--blue); }
-.mini-key-band { width: 9px; height: 9px; border: 1px solid var(--green); border-radius: 3px; background: var(--green-soft); }
-.mini-key-selected { border: 1px solid var(--green); border-radius: 2px; background: var(--green-soft); }
+.range-position-cell { width: 132px; min-width: 132px; vertical-align: middle; }
+.range-position-heading { width: 132px; min-width: 132px; }
+.range-position-plot { display: block; width: 120px; height: 16px; overflow: visible; }
+.range-position-line { stroke: var(--line-strong); stroke-width: 1.35; stroke-linecap: round; opacity: .8; }
+.range-position-dot { stroke: var(--surface); stroke-width: 1.15; }
+.range-position-dot-normal { fill: var(--green); }
+.range-position-dot-low, .range-position-dot-borderline { fill: var(--amber); }
+.range-position-dot-high { fill: var(--red); }
+.range-position-dot-missing, .range-position-dot-unclassified { fill: var(--muted); }
+.range-position-unavailable { display: inline-block; width: 120px; color: var(--muted); text-align: center; }
 .reading-value { color: var(--ink-soft); font-weight: 570; }
 .reading-value-high { color: var(--red); font-weight: 680; }
 .reading-value-borderline { color: var(--amber); font-weight: 680; }
@@ -691,7 +668,7 @@ body { font-size: 14px; background: var(--page); }
 .search-field input { font-size: 11px; }
 .select-field select { font-size: 10px; }
 .filter-context { font-size: 10px; }
-.results-table { min-width: 1280px; font-size: 10px; }
+.results-table { min-width: 1200px; font-size: 10px; }
 .results-table thead th { height: 44px; padding: 0 12px; font-size: 9px; }
 .results-table tbody th, .results-table tbody td { height: 46px; padding: 6px 12px; }
 .biomarker-column { width: 230px; min-width: 230px; }
