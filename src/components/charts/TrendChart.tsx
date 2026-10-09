@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis, CartesianGrid } from "recharts";
 import { readBiomarker, reports } from "../../data/bloodReports";
 import type { BiomarkerId, BiomarkerResult } from "../../types/health";
@@ -47,6 +47,7 @@ function ReportTooltip({ active, payload }: TooltipContentProps) {
 }
 
 export function TrendChart({ biomarkerId, index, note }: TrendChartProps) {
+  const reduceMotion = useReducedMotion();
   const summary = getTrendSummary(biomarkerId);
   const metric = summary.latest ?? readBiomarker(reports.at(-1)!, biomarkerId);
   const data: ChartPoint[] = reports.map((report) => {
@@ -64,9 +65,10 @@ export function TrendChart({ biomarkerId, index, note }: TrendChartProps) {
   return (
     <motion.article
       className="chart-card surface-card"
-      initial={{ opacity: 0, y: 8 }}
+      initial={reduceMotion ? false : { opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.24, delay: Math.min(index * 0.035, 0.22) }}
+      whileHover={reduceMotion ? undefined : { y: -2 }}
+      transition={{ duration: reduceMotion ? 0 : 0.24, delay: reduceMotion ? 0 : Math.min(index * 0.04, 0.2) }}
     >
       <div className="chart-card-heading">
         <div>

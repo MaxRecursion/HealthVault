@@ -1,4 +1,5 @@
-import { Activity, Droplets, FlaskConical, Sparkles } from "lucide-react";
+import { Activity, CalendarDays, Droplets, FlaskConical, Sparkles } from "lucide-react";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { biomarkerCatalog, reports } from "./data/bloodReports";
 import { KeyObservations } from "./components/insights/KeyObservations";
@@ -55,11 +56,16 @@ export default function App() {
   const [view, setView] = useState<DashboardView>("overview");
   const [selectedReportId, setSelectedReportId] = useState(reports.at(-1)!.id);
   const [isDark, setIsDark] = useState(false);
+  const reduceMotion = useReducedMotion();
   const selectedReport = reports.find((report) => report.id === selectedReportId) ?? reports.at(-1)!;
 
   useEffect(() => {
     document.documentElement.classList.toggle("dark", isDark);
   }, [isDark]);
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: reduceMotion ? "auto" : "smooth" });
+  }, [view, reduceMotion]);
 
   const keyMetrics = useMemo(() => kpiConfiguration.map((config) => {
     const metric = biomarkerCatalog.find((item) => item.id === config.id)!;
@@ -69,7 +75,6 @@ export default function App() {
 
   function handleShowResults() {
     setView("results");
-    window.requestAnimationFrame(() => document.getElementById("results-title")?.scrollIntoView({ behavior: "smooth", block: "start" }));
   }
 
   return (
@@ -81,18 +86,26 @@ export default function App() {
         onToggleTheme={() => setIsDark((current) => !current)}
       />
       <main className="page-content">
-          <div key={view} className="view-content">
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.div
+            key={view}
+            className="view-content"
+            initial={reduceMotion ? false : { opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={reduceMotion ? undefined : { opacity: 0, y: -4 }}
+            transition={{ duration: reduceMotion ? 0 : 0.24, ease: [0.22, 1, 0.36, 1] }}
+          >
             {view === "overview" && (
               <>
                 <section className="page-intro">
-                  <div>
+                  <div className="page-intro-copy">
                     <span className="eyebrow">PERSONAL HEALTH OVERVIEW</span>
-                    <h1>Three reports. One clear view.</h1>
+                    <h1>Your bloodwork, in context.</h1>
                     <p>Track measured changes and compare results with each report’s own reference ranges.</p>
                   </div>
                   <div className="report-date-badge">
-                    <span>Latest collection</span>
-                    <strong>9 October 2026</strong>
+                    <span className="report-date-icon"><CalendarDays size={16} /></span>
+                    <span className="report-date-copy"><small>Latest collection</small><strong>9 October 2026</strong></span>
                   </div>
                 </section>
 
@@ -106,7 +119,7 @@ export default function App() {
                   </div>
                   <div className="kpi-grid">
                     {keyMetrics.map(({ config, metric, latest, previous }) => (
-                      <KpiCard key={config.id} {...config} metric={metric} latest={latest} previous={previous} />
+                      <KpiCard key={config.id} {...config} metricId={config.id} metric={metric} latest={latest} previous={previous} />
                     ))}
                   </div>
                 </section>
@@ -168,7 +181,8 @@ export default function App() {
                 <ReferenceDetails />
               </>
             )}
-          </div>
+          </motion.div>
+        </AnimatePresence>
         <AboutPanel />
         <footer className="app-footer">
           <span><span className="footer-mark"><Activity size={13} /></span> HealthTrack <i /> Personal Blood Report Analytics</span>

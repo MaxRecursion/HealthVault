@@ -1,4 +1,5 @@
-import { Activity, LayoutDashboard, Moon, Sun, TableProperties, TrendingUp } from "lucide-react";
+import { Activity, LayoutDashboard, Moon, Ruler, Scale, Sun, TableProperties, TrendingUp, UserRound } from "lucide-react";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 
 export type DashboardView = "overview" | "trends" | "results";
 
@@ -16,11 +17,17 @@ const navItems: { id: DashboardView; label: string; icon: typeof LayoutDashboard
 ];
 
 export function AppHeader({ view, onViewChange, isDark, onToggleTheme }: AppHeaderProps) {
+  const reduceMotion = useReducedMotion();
+
   return (
     <header className="app-header">
       <div className="header-main">
         <a href="#overview" className="brand-lockup" onClick={() => onViewChange("overview")} aria-label="HealthTrack home">
-          <span className="brand-mark"><Activity size={19} strokeWidth={2.2} /></span>
+          <motion.span
+            className="brand-mark"
+            whileHover={reduceMotion ? undefined : { rotate: -5, scale: 1.04 }}
+            transition={{ type: "spring", stiffness: 360, damping: 22 }}
+          ><Activity size={19} strokeWidth={2.2} /></motion.span>
           <span>
             <span className="brand-name">HealthTrack</span>
             <span className="brand-caption">PERSONAL BLOOD REPORT ANALYTICS</span>
@@ -29,8 +36,9 @@ export function AppHeader({ view, onViewChange, isDark, onToggleTheme }: AppHead
 
         <div className="header-tools">
           <div className="profile-summary" aria-label="Profile summary">
-            <span className="profile-item">Male <i /> 37 years 5 months</span>
-            <span className="profile-item">184 cm <i /> 95 kg</span>
+            <span className="profile-item"><UserRound size={14} /> <span>Male · 37 years 5 months</span></span>
+            <span className="profile-item"><Ruler size={14} /> <span>184 cm</span></span>
+            <span className="profile-item"><Scale size={14} /> <span>95 kg</span></span>
           </div>
           <button
             type="button"
@@ -39,7 +47,16 @@ export function AppHeader({ view, onViewChange, isDark, onToggleTheme }: AppHead
             aria-label={isDark ? "Switch to light theme" : "Switch to dark theme"}
             title={isDark ? "Switch to light theme" : "Switch to dark theme"}
           >
-            {isDark ? <Sun size={17} /> : <Moon size={17} />}
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.span
+                key={isDark ? "light" : "dark"}
+                initial={reduceMotion ? false : { opacity: 0, rotate: -35, scale: 0.82 }}
+                animate={{ opacity: 1, rotate: 0, scale: 1 }}
+                exit={reduceMotion ? undefined : { opacity: 0, rotate: 35, scale: 0.82 }}
+                transition={{ duration: reduceMotion ? 0 : 0.18 }}
+                className="theme-glyph"
+              >{isDark ? <Sun size={17} /> : <Moon size={17} />}</motion.span>
+            </AnimatePresence>
           </button>
         </div>
       </div>
@@ -54,8 +71,15 @@ export function AppHeader({ view, onViewChange, isDark, onToggleTheme }: AppHead
               onClick={() => onViewChange(id)}
               aria-current={view === id ? "page" : undefined}
             >
+              {view === id && (
+                <motion.span
+                  layoutId="healthtrack-nav-indicator"
+                  className="nav-active-surface"
+                  transition={reduceMotion ? { duration: 0 } : { type: "spring", stiffness: 420, damping: 36 }}
+                />
+              )}
               <Icon size={16} strokeWidth={1.9} />
-              {label}
+              <span>{label}</span>
             </button>
           ))}
         </nav>

@@ -24,7 +24,7 @@ export function AboutPanel() {
       </div>
       <div className="privacy-callout">
         <ShieldAlert size={16} />
-        <p><strong>Sharing note</strong> — This static dashboard includes the report values in its app bundle. GitHub Pages sites are publicly available even when the source repository is private; review the dataset before any deployment.</p>
+        <p><strong>Public page</strong> — Report values are included in this app and visible to anyone who can open the page. The dashboard does not send them to an external data service.</p>
       </div>
     </section>
   );

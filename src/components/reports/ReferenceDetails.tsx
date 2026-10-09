@@ -1,10 +1,15 @@
 import { ChevronDown, Info } from "lucide-react";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { useState } from "react";
 import { biomarkerCatalog, readBiomarker, reports } from "../../data/bloodReports";
 
 export function ReferenceDetails() {
+  const [isOpen, setIsOpen] = useState(false);
+  const reduceMotion = useReducedMotion();
+
   return (
-    <details className="reference-details surface-card">
-      <summary>
+    <details className="reference-details surface-card" open={isOpen} onToggle={(event) => setIsOpen(event.currentTarget.open)}>
+      <summary aria-controls="report-reference-content">
         <span className="reference-summary-icon"><Info size={16} /></span>
         <span className="reference-summary-copy">
           <strong>Report details & reference ranges</strong>
@@ -12,7 +17,16 @@ export function ReferenceDetails() {
         </span>
         <ChevronDown className="reference-chevron" size={16} aria-hidden="true" />
       </summary>
-      <div className="reference-body">
+      <AnimatePresence initial={false}>
+      {isOpen && <motion.div
+        id="report-reference-content"
+        className="reference-body"
+        initial={reduceMotion ? false : { height: 0, opacity: 0 }}
+        animate={{ height: "auto", opacity: 1 }}
+        exit={reduceMotion ? undefined : { height: 0, opacity: 0 }}
+        transition={{ duration: reduceMotion ? 0 : 0.28, ease: [0.22, 1, 0.36, 1] }}
+        style={{ overflow: "hidden" }}
+      >
         <div className="report-source-grid">
           {reports.map((report) => (
             <article className="report-source-card" key={report.id}>
@@ -57,7 +71,8 @@ export function ReferenceDetails() {
             </tbody>
           </table>
         </div>
-      </div>
+      </motion.div>}
+      </AnimatePresence>
     </details>
   );
 }

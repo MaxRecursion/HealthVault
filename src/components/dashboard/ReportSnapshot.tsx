@@ -1,4 +1,5 @@
 import { ArrowUpRight, FileText } from "lucide-react";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { getReportResults, readBiomarker, reports } from "../../data/bloodReports";
 import type { BiomarkerId, BloodReport } from "../../types/health";
 import { formatValue } from "../../utils/formatters";
@@ -25,6 +26,7 @@ const snapshotMarkers: BiomarkerId[] = [
 ];
 
 export function ReportSnapshot({ report, onShowResults }: ReportSnapshotProps) {
+  const reduceMotion = useReducedMotion();
   const results = getReportResults(report);
   const measuredCount = results.filter((reading) => reading.value !== null).length;
   const flaggedCount = results.filter((reading) => {
@@ -33,7 +35,16 @@ export function ReportSnapshot({ report, onShowResults }: ReportSnapshotProps) {
   }).length;
 
   return (
-    <section className="snapshot-card surface-card" aria-labelledby="snapshot-title">
+    <AnimatePresence mode="wait" initial={false}>
+    <motion.section
+      key={report.id}
+      className="snapshot-card surface-card"
+      aria-labelledby="snapshot-title"
+      initial={reduceMotion ? false : { opacity: 0, y: 7 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={reduceMotion ? undefined : { opacity: 0, y: -4 }}
+      transition={{ duration: reduceMotion ? 0 : 0.2, ease: [0.22, 1, 0.36, 1] }}
+    >
       <div className="section-heading-inline snapshot-heading">
         <div>
           <div className="eyebrow"><FileText size={14} /> SELECTED REPORT</div>
@@ -66,7 +77,8 @@ export function ReportSnapshot({ report, onShowResults }: ReportSnapshotProps) {
           View all results <ArrowUpRight size={14} />
         </button>
       </div>
-    </section>
+    </motion.section>
+    </AnimatePresence>
   );
 }
 

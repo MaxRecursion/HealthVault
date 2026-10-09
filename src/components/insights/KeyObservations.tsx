@@ -1,4 +1,5 @@
 import { ArrowDown, ArrowUp, CircleAlert, Info, MoveRight } from "lucide-react";
+import { motion, useReducedMotion } from "framer-motion";
 import { readBiomarker, reports } from "../../data/bloodReports";
 import { formatValue } from "../../utils/formatters";
 
@@ -16,6 +17,7 @@ function absoluteDifferenceText(later: number | null, earlier: number | null, pr
 }
 
 export function KeyObservations() {
+  const reduceMotion = useReducedMotion();
   const may = reports[0]!;
   const november = reports[1]!;
   const october = reports[2]!;
@@ -98,17 +100,29 @@ export function KeyObservations() {
         </div>
         <span className="observation-tag">Observations, not diagnoses</span>
       </div>
-      <div className="observations-list">
+      <motion.div
+        className="observations-list"
+        initial={reduceMotion ? false : "hidden"}
+        animate="visible"
+        variants={{ visible: { transition: { staggerChildren: reduceMotion ? 0 : 0.045 } } }}
+      >
         {observations.map(({ icon: Icon, tone, title, detail }) => (
-          <article className="observation-item" key={title}>
+          <motion.article
+            className="observation-item"
+            key={title}
+            variants={{
+              hidden: { opacity: 0, y: 7 },
+              visible: { opacity: 1, y: 0, transition: { duration: reduceMotion ? 0 : 0.22 } },
+            }}
+          >
             <span className={`observation-icon ${tone}`}><Icon size={15} /></span>
             <div>
               <h3>{title}</h3>
               <p>{detail}</p>
             </div>
-          </article>
+          </motion.article>
         ))}
-      </div>
+      </motion.div>
       <p className="observation-footnote">Comparisons describe reported values only; they do not identify causes or recommend treatment.</p>
     </section>
   );

@@ -1,4 +1,5 @@
 import { CalendarDays, Check } from "lucide-react";
+import { motion, useReducedMotion } from "framer-motion";
 import type { BloodReport } from "../../types/health";
 
 interface ReportTimelineProps {
@@ -8,6 +9,7 @@ interface ReportTimelineProps {
 }
 
 export function ReportTimeline({ reports, selectedReportId, onSelect }: ReportTimelineProps) {
+  const reduceMotion = useReducedMotion();
   return (
     <section className="timeline-card surface-card" aria-labelledby="timeline-title">
       <div className="section-heading-inline">
@@ -29,7 +31,16 @@ export function ReportTimeline({ reports, selectedReportId, onSelect }: ReportTi
               onClick={() => onSelect(report.id)}
               aria-pressed={selected}
             >
-              <span className="timeline-node" aria-hidden="true">{selected ? <Check size={12} /> : index + 1}</span>
+              <span className="timeline-node" aria-hidden="true">
+                {selected && (
+                  <motion.span
+                    layoutId="report-timeline-selection"
+                    className="timeline-node-active"
+                    transition={reduceMotion ? { duration: 0 } : { type: "spring", stiffness: 460, damping: 34 }}
+                  />
+                )}
+                <span className="timeline-node-label">{selected ? <Check size={12} /> : index + 1}</span>
+              </span>
               <span className="timeline-option-label">{report.shortLabel}</span>
               <span className="timeline-option-date">{report.label}</span>
             </button>

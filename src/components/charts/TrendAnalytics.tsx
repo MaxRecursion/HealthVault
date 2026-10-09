@@ -1,4 +1,4 @@
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import {
   Activity,
   Droplets,
@@ -105,6 +105,7 @@ const categoryToGroup: Partial<Record<BiomarkerCategory, string>> = {
 };
 
 export function TrendAnalytics({ selectedCategory }: TrendAnalyticsProps) {
+  const reduceMotion = useReducedMotion();
   const [activeGroupId, setActiveGroupId] = useState(() =>
     (selectedCategory && categoryToGroup[selectedCategory]) || trendGroups[0]!.id,
   );
@@ -134,21 +135,28 @@ export function TrendAnalytics({ selectedCategory }: TrendAnalyticsProps) {
               className={`trend-tab ${selected ? "trend-tab-active" : ""}`}
               onClick={() => setActiveGroupId(group.id)}
             >
-              <Icon size={15} />{group.label}
+              {selected && (
+                <motion.span
+                  layoutId="trend-tab-indicator"
+                  className="trend-tab-indicator"
+                  transition={reduceMotion ? { duration: 0 } : { type: "spring", stiffness: 420, damping: 34 }}
+                />
+              )}
+              <Icon size={15} /><span>{group.label}</span>
             </button>
           );
         })}
       </div>
 
-      <AnimatePresence mode="wait">
+      <AnimatePresence mode="wait" initial={false}>
         <motion.div
           key={activeGroup.id}
           role="tabpanel"
           className="trend-group-panel"
-          initial={{ opacity: 0, y: 5 }}
+          initial={reduceMotion ? false : { opacity: 0, y: 5 }}
           animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -3 }}
-          transition={{ duration: 0.18 }}
+          exit={reduceMotion ? undefined : { opacity: 0, y: -3 }}
+          transition={{ duration: reduceMotion ? 0 : 0.2, ease: [0.22, 1, 0.36, 1] }}
         >
           <div className="trend-group-intro">
             <div>

@@ -1,4 +1,5 @@
 import { ChevronDown, ChevronRight, Search, SlidersHorizontal, ArrowDownUp } from "lucide-react";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useMemo, useState } from "react";
 import { biomarkerCatalog, readBiomarker, reports } from "../../data/bloodReports";
 import type { BiomarkerCategory, BiomarkerId, BiomarkerResult, ResultStatus } from "../../types/health";
@@ -47,6 +48,7 @@ function ExpandedReading({ reading }: { reading: BiomarkerResult }) {
 }
 
 export function ResultsTable({ selectedReportId }: ResultsTableProps) {
+  const reduceMotion = useReducedMotion();
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<"all" | BiomarkerCategory>("all");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
@@ -182,7 +184,11 @@ export function ResultsTable({ selectedReportId }: ResultsTableProps) {
                 : null;
               return (
                 <FragmentRows key={metric.id}>
-                  <tr className={`result-row ${expanded ? "result-row-expanded" : ""}`}>
+                  <motion.tr
+                    layout="position"
+                    transition={{ duration: reduceMotion ? 0 : 0.18 }}
+                    className={`result-row ${expanded ? "result-row-expanded" : ""}`}
+                  >
                     <th scope="row" className="sticky-column biomarker-column">
                       <button
                         type="button"
@@ -206,16 +212,34 @@ export function ResultsTable({ selectedReportId }: ResultsTableProps) {
                     <td className="trend-cell">
                       {delta === null ? "—" : delta === 0 ? "No change" : `${delta > 0 ? "↑" : "↓"} ${formatValue(Math.abs(delta), metric.precision)}`}
                     </td>
-                  </tr>
-                  {expanded && (
-                    <tr className="expanded-row">
-                      <td colSpan={7}>
-                        <div className="expanded-readings">
-                          {readings.map((reading) => <ExpandedReading key={reading.sourceDate} reading={reading} />)}
-                        </div>
-                      </td>
-                    </tr>
-                  )}
+                  </motion.tr>
+                  <AnimatePresence initial={false}>
+                    {expanded && (
+                      <motion.tr
+                        key={`${metric.id}-details`}
+                        className="expanded-row"
+                        initial={reduceMotion ? false : { opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={reduceMotion ? undefined : { opacity: 0 }}
+                        transition={{ duration: reduceMotion ? 0 : 0.16 }}
+                      >
+                        <td colSpan={7}>
+                          <motion.div
+                            className="expanded-readings-shell"
+                            initial={reduceMotion ? false : { height: 0, opacity: 0 }}
+                            animate={{ height: "auto", opacity: 1 }}
+                            exit={reduceMotion ? undefined : { height: 0, opacity: 0 }}
+                            transition={{ duration: reduceMotion ? 0 : 0.22, ease: [0.22, 1, 0.36, 1] }}
+                            style={{ overflow: "hidden" }}
+                          >
+                            <div className="expanded-readings">
+                              {readings.map((reading) => <ExpandedReading key={reading.sourceDate} reading={reading} />)}
+                            </div>
+                          </motion.div>
+                        </td>
+                      </motion.tr>
+                    )}
+                  </AnimatePresence>
                 </FragmentRows>
               );
             })}
