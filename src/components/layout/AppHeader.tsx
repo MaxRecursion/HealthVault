@@ -36,7 +36,7 @@ export function AppHeader({ view, onViewChange, isDark, onToggleTheme }: AppHead
 
         <div className="header-tools">
           <div className="profile-summary" aria-label="Profile summary">
-            <span className="profile-item"><UserRound size={14} /> <span>Male · 37 years 5 months</span></span>
+            <span className="profile-item"><UserRound size={14} /> <span>Male · 37 years</span></span>
             <span className="profile-item"><Ruler size={14} /> <span>184 cm</span></span>
             <span className="profile-item"><Scale size={14} /> <span>95 kg</span></span>
           </div>

@@ -3,6 +3,7 @@ import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { biomarkerCatalog, reports } from "./data/bloodReports";
 import { KeyObservations } from "./components/insights/KeyObservations";
+import { ActionPlan } from "./components/insights/ActionPlan";
 import { AppHeader, type DashboardView } from "./components/layout/AppHeader";
 import { KpiCard } from "./components/dashboard/KpiCard";
 import { ReportSnapshot, compareReports } from "./components/dashboard/ReportSnapshot";
@@ -141,6 +142,8 @@ export default function App() {
                     </div>
                   </aside>
                 </div>
+
+                <ActionPlan />
 
                 <Suspense fallback={<div className="loading-card surface-card" role="status">Loading trend panels…</div>}>
                   <TrendAnalytics />

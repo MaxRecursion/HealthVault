@@ -421,6 +421,64 @@ a { color: inherit; text-decoration: none; }
   .app-footer { align-items: flex-start; flex-direction: column; }
 }
 
+.action-plan { padding: 21px; }
+.action-plan-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; }
+.action-plan-heading h2 { margin: 6px 0 4px; color: var(--ink); font-size: 20px; line-height: 1.25; letter-spacing: -.035em; font-weight: 700; }
+.action-plan-heading > div:first-child > p { margin: 0; color: var(--muted); font-size: 10px; line-height: 1.5; }
+.plan-profile { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end; padding: 8px 10px; border: 1px solid var(--line); border-radius: 9px; background: var(--surface-soft); color: var(--ink-soft); font-size: 9px; white-space: nowrap; }
+.plan-profile i { width: 3px; height: 3px; border-radius: 50%; background: var(--muted); }
+.action-plan-priorities { margin-top: 17px; }
+.action-plan-priorities > h3 { margin: 0 0 9px; color: var(--ink-soft); font-size: 11px; font-weight: 700; }
+.plan-priority-list { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin: 0; padding: 0; list-style: none; }
+.plan-priority { display: flex; align-items: flex-start; gap: 9px; min-width: 0; padding: 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface-soft); }
+.plan-priority-icon { display: grid; place-items: center; width: 27px; height: 27px; flex: 0 0 27px; border-radius: 8px; }
+.plan-priority-red { color: var(--red); background: var(--red-soft); }
+.plan-priority-amber { color: var(--amber); background: var(--amber-soft); }
+.plan-priority-blue { color: var(--blue); background: var(--blue-soft); }
+.plan-priority h4 { margin: 1px 0 5px; color: var(--ink-soft); font-size: 10px; line-height: 1.4; font-weight: 690; }
+.plan-priority p { margin: 0; color: var(--muted); font-size: 10px; line-height: 1.55; }
+.plan-routine-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 12px; }
+.plan-routine-card { min-width: 0; padding: 15px; border: 1px solid var(--line); border-radius: 11px; background: var(--surface); }
+.plan-routine-title { display: flex; align-items: center; gap: 9px; }
+.plan-routine-icon { display: grid; place-items: center; width: 32px; height: 32px; flex: 0 0 32px; border-radius: 9px; }
+.plan-diet-icon { color: var(--green); background: var(--green-soft); }
+.plan-move-icon { color: var(--blue); background: var(--blue-soft); }
+.plan-routine-title h3 { margin: 4px 0 0; color: var(--ink); font-size: 13px; line-height: 1.35; font-weight: 690; }
+.plan-bullet-list { display: grid; gap: 8px; margin: 13px 0 0; padding: 0 0 0 16px; color: var(--muted); font-size: 10px; line-height: 1.58; }
+.plan-bullet-list li::marker { color: var(--green); }
+.plan-bullet-list strong { color: var(--ink-soft); font-weight: 680; }
+.plan-routine-note { display: flex; align-items: flex-start; gap: 6px; margin: 11px 0 0; padding-top: 9px; border-top: 1px solid var(--line); color: var(--muted); font-size: 8.5px; line-height: 1.55; }
+.plan-routine-note svg { flex: 0 0 13px; margin-top: 1px; color: var(--blue); }
+.plan-movement-target { margin: 11px 0 0; color: var(--muted); font-size: 9px; line-height: 1.5; }
+.movement-week { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 5px 11px; margin-top: 10px; }
+.movement-week > div { display: flex; align-items: center; gap: 7px; min-width: 0; padding: 5px 7px; border-radius: 6px; background: var(--surface-soft); color: var(--muted); font-size: 8px; line-height: 1.35; }
+.movement-week b { flex: 0 0 25px; color: var(--ink-soft); font-size: 8px; font-weight: 700; }
+.movement-week span { min-width: 0; }
+.plan-footnotes { display: grid; grid-template-columns: 1fr 1.4fr; gap: 12px; margin-top: 13px; padding: 11px 12px; border-radius: 8px; background: var(--surface-soft); }
+.plan-footnotes p { margin: 0; color: var(--muted); font-size: 9px; line-height: 1.5; }
+.plan-footnotes strong { color: var(--ink-soft); font-weight: 680; }
+.plan-sources { display: flex; align-items: center; flex-wrap: wrap; gap: 7px 13px; margin-top: 12px; color: var(--muted); font-size: 9px; }
+.plan-sources a { display: inline-flex; align-items: center; gap: 3px; color: var(--green); font-weight: 620; }
+.plan-sources a:hover { text-decoration: underline; text-underline-offset: 2px; }
+
+@media (max-width: 1000px) {
+  .plan-priority-list { grid-template-columns: 1fr; }
+}
+@media (max-width: 850px) {
+  .plan-routine-grid { grid-template-columns: 1fr; }
+  .plan-footnotes { grid-template-columns: 1fr; }
+}
+@media (max-width: 600px) {
+  .action-plan { padding: 16px 13px; }
+  .action-plan-heading { flex-direction: column; }
+  .action-plan-heading h2 { font-size: 18px; }
+  .plan-profile { justify-content: flex-start; white-space: normal; }
+  .plan-priority { padding: 10px; }
+  .plan-routine-card { padding: 13px 11px; }
+  .movement-week { grid-template-columns: 1fr; }
+  .plan-sources { align-items: flex-start; flex-direction: column; gap: 8px; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
