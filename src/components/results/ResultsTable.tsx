@@ -14,12 +14,18 @@ interface ResultsTableProps {
   selectedReportId: string;
 }
 
-function ReadingCell({ reading }: { reading: BiomarkerResult }) {
+function ReadingCell({ reading, selected }: { reading: BiomarkerResult; selected: boolean }) {
   const status = deriveStatus(reading.value, reading.referenceRange);
+  const formattedValue = formatValue(reading.value, reading.precision);
+  const accessibleStatus = statusLabel(status);
   return (
-    <td className="reading-cell">
+    <td
+      className={`reading-cell reading-cell-${status} ${selected ? "reading-cell-selected" : ""}`}
+      aria-label={`${accessibleStatus}: ${formattedValue}${reading.value === null ? "" : ` ${reading.unit}`}`}
+      title={`${accessibleStatus}${reading.referenceRange ? ` · Lab range: ${reading.referenceRange.label}` : ""}`}
+    >
       <span className={`reading-value ${status === "high" || status === "low" || status === "borderline" ? `reading-value-${status}` : ""}`}>
-        {formatValue(reading.value, reading.precision)}
+        {formattedValue}
       </span>
       {status === "high" || status === "low" || status === "borderline" ? (
         <span className={`cell-flag cell-flag-${status}`} aria-label={statusLabel(status)}>
@@ -150,6 +156,14 @@ export function ResultsTable({ selectedReportId }: ResultsTableProps) {
         <span className="filter-context">Status uses {selectedReport.shortLabel}</span>
       </div>
 
+      <div className="results-heatmap-legend" aria-label="Results table color key">
+        <span className="heatmap-legend-intro">Cell tint follows that report’s range:</span>
+        <span><i className="heatmap-swatch heatmap-swatch-normal" />Within range</span>
+        <span><i className="heatmap-swatch heatmap-swatch-borderline" />Low / borderline</span>
+        <span><i className="heatmap-swatch heatmap-swatch-high" />High</span>
+        <span><i className="heatmap-swatch heatmap-swatch-neutral" />Missing / unclassified</span>
+      </div>
+
       <div className="table-scroll surface-card">
         <table className="results-table">
           <caption className="sr-only">Biomarker values, references, and trends across May 2025, November 2025, and October 2026</caption>
@@ -205,7 +219,7 @@ export function ResultsTable({ selectedReportId }: ResultsTableProps) {
                       </button>
                     </th>
                     {readings.map((reading) => (
-                      <ReadingCell key={reading.sourceDate} reading={reading} />
+                      <ReadingCell key={reading.sourceDate} reading={reading} selected={reading.sourceDate === selectedReport.date} />
                     ))}
                     <td className="range-cell">{selected.referenceRange?.label ?? "Not stated"}</td>
                     <td><StatusBadge reading={selected} /></td>
