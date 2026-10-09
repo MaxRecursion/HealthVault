@@ -2,9 +2,9 @@ import { ChevronDown, ChevronRight, Search, SlidersHorizontal, ArrowDownUp } fro
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useMemo, useState } from "react";
 import { biomarkerCatalog, readBiomarker, reports } from "../../data/bloodReports";
-import type { BiomarkerCategory, BiomarkerId, BiomarkerResult, ResultStatus } from "../../types/health";
+import type { BiomarkerCategory, BiomarkerId, BiomarkerResult, RangeBand, ResultStatus } from "../../types/health";
 import { formatValue } from "../../utils/formatters";
-import { deriveStatus, statusLabel } from "../../utils/referenceRanges";
+import { deriveStatus, getMatchedBand, statusLabel } from "../../utils/referenceRanges";
 import { StatusBadge } from "../ui/StatusBadge";
 
 type StatusFilter = "all" | ResultStatus;
@@ -50,6 +50,217 @@ function ExpandedReading({ reading }: { reading: BiomarkerResult }) {
         Source status: {reading.reportedStatus ?? "Not separately stated"}
       </span>
     </div>
+  );
+}
+
+interface NumericBand {
+  lower?: number;
+  upper?: number;
+  status: RangeBand["status"];
+}
+
+function numericBands(reading: BiomarkerResult): NumericBand[] {
+  const range = reading.referenceRange;
+  if (!range) return [];
+  if (range.bands?.length) {
+    return range.bands.map(({ lower, upper, status }) => ({ lower, upper, status }));
+  }
+  if (range.lower === undefined && range.upper === undefined) return [];
+  return [{ lower: range.lower, upper: range.upper, status: "normal" }];
+}
+
+function rangeDistanceLabel(reading: BiomarkerResult): string {
+  if (reading.value === null) return "No result in this report";
+  const range = reading.referenceRange;
+  const segments = numericBands(reading);
+  if (!range || segments.length === 0) return "No numeric bounds printed";
+
+  const band = range.bands?.length ? getMatchedBand(reading.value, range) : undefined;
+  const segment = band ?? segments[0];
+  if (!segment) return "No numeric bounds printed";
+  const status = deriveStatus(reading.value, range);
+
+  const boundaries = Array.from(new Set(segments.flatMap(({ lower, upper }) => [lower, upper])
+    .filter((bound): bound is number => bound !== undefined && Number.isFinite(bound))));
+  const formatDistance = (distance: number) => `${formatValue(distance, reading.precision)} ${reading.unit}`;
+  const percentFrom = (distance: number, boundary: number) => boundary === 0
+    ? ""
+    : ` (${formatValue((distance / Math.abs(boundary)) * 100, 1)}% of boundary)`;
+
+  if (range.bands?.length && !band) {
+    const nearest = boundaries
+      .map((boundary) => ({ boundary, distance: Math.abs(reading.value! - boundary) }))
+      .sort((left, right) => left.distance - right.distance)[0];
+    return nearest
+      ? `${formatDistance(nearest.distance)} to nearest printed category boundary`
+      : "No numeric bounds printed";
+  }
+
+  if (band) {
+    const category = `In ${band.label} category`;
+    if (band.lower !== undefined && band.upper !== undefined) {
+      const distance = Math.min(Math.abs(reading.value - band.lower), Math.abs(band.upper - reading.value));
+      const width = Math.abs(band.upper - band.lower);
+      return `${category} · ${formatDistance(distance)} from edge (${formatValue(width === 0 ? 0 : (distance / width) * 100, 0)}% of span)`;
+    }
+    if (band.upper !== undefined) {
+      const distance = Math.abs(band.upper - reading.value);
+      return `${category} · ${formatDistance(distance)} below ${formatValue(band.upper, reading.precision)}${percentFrom(distance, band.upper)}`;
+    }
+    if (band.lower !== undefined) {
+      const distance = Math.abs(reading.value - band.lower);
+      return `${category} · ${formatDistance(distance)} above ${formatValue(band.lower, reading.precision)}${percentFrom(distance, band.lower)}`;
+    }
+  }
+
+  if (status === "low" && segment.lower !== undefined) {
+    const distance = segment.lower - reading.value;
+    return `${formatDistance(distance)} below lower limit ${formatValue(segment.lower, reading.precision)}${percentFrom(distance, segment.lower)}`;
+  }
+  if (status === "high" && segment.upper !== undefined) {
+    const distance = reading.value - segment.upper;
+    return `${formatDistance(distance)} above upper limit ${formatValue(segment.upper, reading.precision)}${percentFrom(distance, segment.upper)}`;
+  }
+  if (segment.lower !== undefined && reading.value < segment.lower) {
+    const distance = segment.lower - reading.value;
+    return `${formatDistance(distance)} below lower limit ${formatValue(segment.lower, reading.precision)}${percentFrom(distance, segment.lower)}`;
+  }
+  if (segment.upper !== undefined && reading.value > segment.upper) {
+    const distance = reading.value - segment.upper;
+    return `${formatDistance(distance)} above upper limit ${formatValue(segment.upper, reading.precision)}${percentFrom(distance, segment.upper)}`;
+  }
+
+  const edges = [segment.lower, segment.upper]
+    .filter((bound): bound is number => bound !== undefined && Number.isFinite(bound));
+  if (edges.length === 2) {
+    const distance = Math.min(...edges.map((edge) => Math.abs(reading.value! - edge)));
+    const intervalWidth = Math.abs(edges[1]! - edges[0]!);
+    const percentOfInterval = intervalWidth === 0 ? 0 : (distance / intervalWidth) * 100;
+    return `Within range · ${formatDistance(distance)} from edge (${formatValue(percentOfInterval, 0)}% of span)`;
+  }
+  if (segment.upper !== undefined) {
+    const distance = Math.abs(segment.upper - reading.value);
+    const relation = reading.value <= segment.upper ? "below" : "above";
+    return `Within limit · ${formatDistance(distance)} ${relation} ${formatValue(segment.upper, reading.precision)}${percentFrom(distance, segment.upper)}`;
+  }
+  if (segment.lower !== undefined) {
+    const distance = Math.abs(reading.value - segment.lower);
+    const relation = reading.value >= segment.lower ? "above" : "below";
+    return `Within limit · ${formatDistance(distance)} ${relation} ${formatValue(segment.lower, reading.precision)}${percentFrom(distance, segment.lower)}`;
+  }
+  return "No numeric bounds printed";
+}
+
+function MiniTrendCell({
+  metricName,
+  readings,
+  selectedReportId,
+}: {
+  metricName: string;
+  readings: BiomarkerResult[];
+  selectedReportId: string;
+}) {
+  const plotTop = 5;
+  const plotBottom = 34;
+  const pointX = [20, 78, 136];
+  const selectedIndex = reports.findIndex((report) => report.id === selectedReportId);
+  const selectedReading = readings[selectedIndex] ?? readings.at(-1)!;
+  const segments = readings.map(numericBands);
+  const domainValues = [
+    ...readings.flatMap((reading) => reading.value === null ? [] : [reading.value]),
+    ...segments.flatMap((items) => items.flatMap(({ lower, upper }) => [lower, upper])
+      .filter((bound): bound is number => bound !== undefined && Number.isFinite(bound))),
+  ];
+  const positiveValues = domainValues.filter((value) => value > 0);
+  const smallestPositive = positiveValues.length ? Math.min(...positiveValues) : 1;
+  const largestPositive = positiveValues.length ? Math.max(...positiveValues) : 10;
+  const domainMin = smallestPositive / 1.7;
+  const domainMax = Math.max(largestPositive * 1.7, domainMin * 10);
+  const logMin = Math.log(domainMin);
+  const logSpan = Math.log(domainMax) - logMin;
+  const yFor = (value: number | undefined) => {
+    if (value === undefined) return plotBottom;
+    if (value <= 0) return plotBottom;
+    const fraction = Math.min(1, Math.max(0, (Math.log(value) - logMin) / logSpan));
+    return plotBottom - fraction * (plotBottom - plotTop);
+  };
+  const summary = rangeDistanceLabel(selectedReading);
+  const accessibleReadings = readings.map((reading) => {
+    const status = statusLabel(deriveStatus(reading.value, reading.referenceRange));
+    const value = reading.value === null ? "no measured value" : `${formatValue(reading.value, reading.precision)} ${reading.unit}`;
+    return `${reading.sourceLabel}: ${value}; ${status}; printed range ${reading.referenceRange?.label ?? "not stated"}`;
+  }).join(". ");
+  const shortDate = (label: string) => label.split(" ")[0] ?? label;
+
+  return (
+    <td className="mini-trend-cell">
+      <div className="mini-trend-wrap">
+        <svg
+          className="mini-range-plot"
+          viewBox="0 0 156 51"
+          role="img"
+          aria-label={`${metricName} logarithmic trend and reference bands. ${accessibleReadings}. Selected result position: ${summary}. Zero values are shown at the bottom of the log scale.`}
+        >
+          <title>{`${metricName}: three dated values with each report’s numeric reference interval`}</title>
+          {pointX.map((x, index) => (
+            <g key={`range-${readings[index]?.sourceDate ?? index}`}>
+              {index === selectedIndex ? <rect className="mini-selected-column" x={x - 13} y={plotTop - 2} width="26" height={plotBottom - plotTop + 4} rx="5" /> : null}
+              <line className="mini-date-guide" x1={x} x2={x} y1={plotTop} y2={plotBottom} />
+              {segments[index]?.map((segment, bandIndex) => {
+                const top = segment.upper === undefined ? plotTop : yFor(segment.upper);
+                const bottom = segment.lower === undefined ? plotBottom : yFor(segment.lower);
+                const rectTop = Math.min(top, bottom);
+                const rectHeight = Math.max(1.5, Math.abs(bottom - top));
+                return (
+                  <g className={`mini-range-zone mini-range-zone-${segment.status}`} key={`band-${bandIndex}`}>
+                    <rect x={x - 6} y={rectTop} width="12" height={rectHeight} rx="2.5" />
+                    {segment.upper !== undefined ? <line x1={x - 8} x2={x + 8} y1={top} y2={top} /> : null}
+                    {segment.lower !== undefined ? <line x1={x - 8} x2={x + 8} y1={bottom} y2={bottom} /> : null}
+                  </g>
+                );
+              })}
+            </g>
+          ))}
+          <line className="mini-axis-line" x1="8" x2="148" y1={plotBottom} y2={plotBottom} />
+          {readings.slice(0, -1).map((reading, index) => {
+            const next = readings[index + 1];
+            if (reading.value === null || next?.value === null || !next) return null;
+            return (
+              <line
+                className="mini-trend-line"
+                key={`trend-${reading.sourceDate}-${next.sourceDate}`}
+                x1={pointX[index]}
+                y1={yFor(reading.value)}
+                x2={pointX[index + 1]}
+                y2={yFor(next.value)}
+              />
+            );
+          })}
+          {readings.map((reading, index) => {
+            if (reading.value === null) return null;
+            const status = deriveStatus(reading.value, reading.referenceRange);
+            const selected = index === selectedIndex;
+            return (
+              <circle
+                className={`mini-value-dot mini-value-dot-${status} ${selected ? "mini-value-dot-selected" : ""}`}
+                key={`value-${reading.sourceDate}`}
+                cx={pointX[index]}
+                cy={yFor(reading.value)}
+                r={selected ? 3.5 : 2.4}
+              >
+                <title>{`${reading.sourceLabel}: ${formatValue(reading.value, reading.precision)} ${reading.unit}; ${statusLabel(status)}; range ${reading.referenceRange?.label ?? "not stated"}`}</title>
+              </circle>
+            );
+          })}
+          {readings.map((reading, index) => (
+            <text className={`mini-date-label ${index === selectedIndex ? "mini-date-label-selected" : ""}`} key={`date-${reading.sourceDate}`} x={pointX[index]} y="48" textAnchor="middle">
+              {shortDate(reading.sourceLabel)}
+            </text>
+          ))}
+        </svg>
+        <span className={`mini-range-distance mini-range-distance-${deriveStatus(selectedReading.value, selectedReading.referenceRange)}`} title={summary}>{summary}</span>
+      </div>
+    </td>
   );
 }
 
@@ -114,7 +325,7 @@ export function ResultsTable({ selectedReportId }: ResultsTableProps) {
         <div>
           <div className="eyebrow">COMPLETE RESULTS</div>
           <h2 id="results-title">Biomarker results</h2>
-          <p className="section-description">Compare all three reports. Expand a row to see each source range.</p>
+          <p className="section-description">Compare the reports and each lab’s own bounds. Mini charts use a logarithmic value scale; expand a row for exact ranges.</p>
         </div>
         <span className="results-count">{rows.length} of {biomarkerCatalog.length} markers</span>
       </div>
@@ -163,6 +374,7 @@ export function ResultsTable({ selectedReportId }: ResultsTableProps) {
         <span><i className="heatmap-swatch heatmap-swatch-high" />High</span>
         <span><i className="heatmap-swatch heatmap-swatch-neutral" />Missing / unclassified</span>
       </div>
+      <p className="mini-trend-key"><span className="mini-key-dot" /> Value <span className="mini-key-band" /> Report’s printed band <span className="mini-key-selected" /> Selected report · Log scale; zero sits at the chart floor</p>
 
       <div className="table-scroll surface-card">
         <table className="results-table">
@@ -181,6 +393,7 @@ export function ResultsTable({ selectedReportId }: ResultsTableProps) {
                   </button>
                 </th>
               ))}
+              <th scope="col" className="mini-trend-heading">Trend &amp; bounds <small>log scale</small></th>
               <th scope="col">Selected range</th>
               <th scope="col">Selected status</th>
               <th scope="col">Trend</th>
@@ -221,6 +434,7 @@ export function ResultsTable({ selectedReportId }: ResultsTableProps) {
                     {readings.map((reading) => (
                       <ReadingCell key={reading.sourceDate} reading={reading} selected={reading.sourceDate === selectedReport.date} />
                     ))}
+                    <MiniTrendCell metricName={metric.name} readings={readings} selectedReportId={selectedReportId} />
                     <td className="range-cell">{selected.referenceRange?.label ?? "Not stated"}</td>
                     <td><StatusBadge reading={selected} /></td>
                     <td className="trend-cell">
@@ -237,7 +451,7 @@ export function ResultsTable({ selectedReportId }: ResultsTableProps) {
                         exit={reduceMotion ? undefined : { opacity: 0 }}
                         transition={{ duration: reduceMotion ? 0 : 0.16 }}
                       >
-                        <td colSpan={7}>
+                        <td colSpan={8}>
                           <motion.div
                             className="expanded-readings-shell"
                             initial={reduceMotion ? false : { height: 0, opacity: 0 }}
@@ -259,7 +473,7 @@ export function ResultsTable({ selectedReportId }: ResultsTableProps) {
             })}
             {rows.length === 0 && (
               <tr>
-                <td colSpan={7} className="empty-table-cell">
+                <td colSpan={8} className="empty-table-cell">
                   <Search size={20} />
                   <strong>No biomarkers match these filters.</strong>
                   <span>Try another name, category, or status.</span>
